@@ -6,7 +6,25 @@
 pip install -r requirements.txt
 ```
 
-2. Заполнить `.env` по примеру `.env.example` (логин и пароль есть только для тестового пользователя, которого я предварительного создал, данные для админа я не стал указывать).
+2. Заполнить `.env` по примеру `.env.example`.
+
+Обязательные данные для основных тестов:
+
+```env
+USER_USERNAME=
+USER_PASSWORD=
+```
+
+Для параметризованной проверки ролей можно дополнительно заполнить:
+
+```env
+MODERATOR_USERNAME=
+MODERATOR_PASSWORD=
+ADMIN_USERNAME=
+ADMIN_PASSWORD=
+```
+
+Если данные модератора или администратора не указаны, соответствующий параметризованный кейс будет пропущен.
 
 3. Запустить тесты:
 
@@ -17,23 +35,23 @@ pytest -v
 # Список тестов
 
 - Успешная авторизация пользователя.
-- Авторизация пользователя с неверным паролем.
+- Параметризованная негативная авторизация:
+  - неверный пароль;
+  - несуществующий пользователь;
+  - пустой username;
+  - пустой password.
 - Получение профиля авторизованного пользователя.
 - Получение профиля без токена.
-- Проверка username и роли пользователя.
 - Верификация валидного токена.
 - Верификация токена без токена.
-- Получение профиля авторизованного администратора.
-- Проверка username и роли администратора.
+- Параметризованная проверка входа и профиля для ролей `user`, `moderator`, `admin`.
 
 # Пояснение по функциям
 
 - `test_user_can_login` - проверяет успешный логин пользователя, наличие `access_token` и тип токена `bearer`.
-- `test_user_cannot_login_with_invalid_password` - проверяет, что пользователь не может получить токен с неверным паролем.
+- `test_user_cannot_login_with_invalid_credentials` - параметризованный тест негативного логина. Проверяет статус `401` и текст ошибки `Incorrect username or password` для неверного пароля, несуществующего пользователя, пустого username и пустого password.
 - `test_authorized_user_can_get_profile` - проверяет, что пользователь с валидным токеном может получить свой профиль.
-- `test_user_cannot_get_profile_without_token` - проверяет, что endpoint профиля закрыт для запроса без токена.
-- `test_authorized_user_profile_has_expected_username_and_role` - проверяет, что в профиле пользователя верные `username` и роль `user`.
+- `test_user_cannot_get_profile_without_token` - проверяет, что эндпоинт профиля закрыт для запроса без токена, статус `403` и текст ошибки `Not authenticated`.
 - `test_user_token_can_be_verified` - проверяет, что валидный токен пользователя подтверждается через `/api/auth/verify`.
-- `test_token_cannot_be_verified_without_token` - проверяет, что `/api/auth/verify` не работает без токена.
-- `test_authorized_admin_can_get_profile` - проверяет, что администратор с валидным токеном может получить свой профиль.
-- `test_authorized_admin_profile_has_expected_username_and_role` - проверяет, что в профиле администратора верные `username` и роль `admin`.
+- `test_token_cannot_be_verified_without_token` - проверяет, что `/api/auth/verify` не работает без токена, статус `403` и текст ошибки `Not authenticated`.
+- `test_role_can_login_and_get_own_profile` - параметризованный тест: по очереди проверяет логин, получение профиля, `username` и роль для `user`, `moderator`, `admin`.

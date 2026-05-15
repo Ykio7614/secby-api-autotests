@@ -61,3 +61,19 @@ def admin_credentials():
     if not username or not password:
         pytest.skip("ADMIN_USERNAME and ADMIN_PASSWORD must be set in .env")
     return username, password
+
+
+@pytest.fixture
+def role_credentials(request):
+    role, username_env, password_env = request.param
+    username = os.getenv(username_env)
+    password = os.getenv(password_env)
+
+    if not username or not password:
+        pytest.skip(f"{username_env} and {password_env} must be set in .env")
+
+    return {
+        "role": role,
+        "username": username,
+        "password": password,
+    }
