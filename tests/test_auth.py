@@ -1,13 +1,11 @@
 import pytest
 
-from assertions.base_assertion import (
+from assertions.auth_assertion import (
     assert_access_token_exists,
-    assert_error_detail,
-    assert_json_schema,
-    assert_status_code,
     assert_token_is_valid,
     assert_token_type_is_bearer,
 )
+from assertions.base_assertion import assert_error_detail, assert_json_schema, assert_status_code
 from models.auth_models import Token
 from test_data.expected_errors import INCORRECT_USERNAME_OR_PASSWORD, NOT_AUTHENTICATED
 from tests.helpers import call_api, extract_access_token

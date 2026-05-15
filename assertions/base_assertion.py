@@ -40,45 +40,6 @@ def assert_left_in_right_json(left, right):
         )
 
 
-def assert_access_token_exists(response):
-    body = get_json_body(response)
-    assert body["access_token"], "\n\tAccess token not found in response JSON"
-
-
-def assert_token_type_is_bearer(response):
-    body = get_json_body(response)
-    assert body["token_type"] == "bearer", "\n\tInvalid token type in response JSON"
-
-
-def assert_profile_exists(response):
-    body = get_json_body(response)
-    assert "profile" in body, "\n\tProfile not found in response JSON"
-
-
-def assert_profile_role(response, expected_role):
-    body = get_json_body(response)
-    actual_role = body["profile"]["role"]["name"]
-    assert actual_role == expected_role, (
-        f"\n\tExpected profile role: {expected_role}\n\tActual profile role: {actual_role}"
-    )
-
-
-def assert_profile_username(response, expected_username):
-    body = get_json_body(response)
-    actual_username = body["profile"]["username"]
-    assert actual_username == expected_username, (
-        f"\n\tExpected profile username: {expected_username}\n\tActual profile username: {actual_username}"
-    )
-
-
-def assert_token_is_valid(response):
-    body = get_json_body(response)
-    assert body["message"] == "Token is valid", (
-        f"\n\tExpected message: Token is valid\n\tActual message: {body['message']}"
-    )
-    assert "user" in body, "\n\tUser not found in token verification response JSON"
-
-
 def assert_error_detail(response, expected_detail):
     body = get_json_body(response)
     actual_detail = body.get("detail")

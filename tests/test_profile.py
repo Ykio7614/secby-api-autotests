@@ -1,8 +1,5 @@
-from assertions.base_assertion import (
-    assert_error_detail,
-    assert_profile_exists,
-    assert_status_code,
-)
+from assertions.base_assertion import assert_error_detail, assert_status_code
+from assertions.profile_assertion import assert_profile_exists
 from test_data.expected_errors import NOT_AUTHENTICATED
 from tests.helpers import call_api, extract_access_token
 
