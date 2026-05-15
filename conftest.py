@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from api.api_client import ApiClient
 from api.auth_api import AuthApi
 from api.user_api import UserApi
+from tests.helpers import call_api, extract_access_token, extract_account_id
 from utilities.logger_util import logger
 
 
@@ -61,3 +62,43 @@ def admin_credentials():
     if not username or not password:
         pytest.skip("ADMIN_USERNAME and ADMIN_PASSWORD must be set in .env")
     return username, password
+
+
+@pytest.fixture
+def moderator_credentials():
+    username = os.getenv("MODERATOR_USERNAME")
+    password = os.getenv("MODERATOR_PASSWORD")
+    if not username or not password:
+        pytest.skip("MODERATOR_USERNAME and MODERATOR_PASSWORD must be set in .env")
+    return username, password
+
+
+@pytest.fixture
+def role_credentials(request):
+    role, username_env, password_env = request.param
+    username = os.getenv(username_env)
+    password = os.getenv(password_env)
+
+    if not username or not password:
+        pytest.skip(f"{username_env} and {password_env} must be set in .env")
+
+    return {
+        "role": role,
+        "username": username,
+        "password": password,
+    }
+
+
+@pytest.fixture
+def account_id_provider(api_client, auth_api, user_api):
+    def get_account_id(credentials):
+        username, password = credentials
+        login_response = call_api("login before account id lookup", auth_api.login, username, password)
+        token = extract_access_token(login_response)
+
+        api_client.set_token(token)
+        profile_response = call_api("get own profile before account id lookup", user_api.get_my_profile)
+
+        return extract_account_id(profile_response)
+
+    return get_account_id

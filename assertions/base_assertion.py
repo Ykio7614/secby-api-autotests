@@ -1,6 +1,15 @@
 from typing import Type
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
+
+
+def get_json_body(response):
+    try:
+        return response.json()
+    except ValueError as error:
+        raise AssertionError(
+            f"\n\tResponse body is not valid JSON\n\tActual body: {response.text}"
+        ) from error
 
 
 def assert_status_code(response, expected_status_code):
@@ -9,12 +18,17 @@ def assert_status_code(response, expected_status_code):
     )
 
 def assert_json_schema(response, model:Type[BaseModel]):
-    body = response.json()
-    if isinstance(body, list):
-        for item in body:
-            model.model_validate(item, strict=True)
-    else:
-        model.model_validate(body, strict=True)
+    body = get_json_body(response)
+    try:
+        if isinstance(body, list):
+            for item in body:
+                model.model_validate(item, strict=True)
+        else:
+            model.model_validate(body, strict=True)
+    except ValidationError as error:
+        raise AssertionError(
+            f"\n\tResponse JSON does not match schema: {model.__name__}\n\tValidation error: {error}"
+        ) from error
     
 
 
@@ -26,40 +40,9 @@ def assert_left_in_right_json(left, right):
         )
 
 
-def assert_access_token_exists(response):
-    body = response.json()
-    assert body["access_token"], "\n\tAccess token not found in response JSON"
-
-
-def assert_token_type_is_bearer(response):
-    body = response.json()
-    assert body["token_type"] == "bearer", "\n\tInvalid token type in response JSON"
-
-
-def assert_profile_exists(response):
-    body = response.json()
-    assert "profile" in body, "\n\tProfile not found in response JSON"
-
-
-def assert_profile_role(response, expected_role):
-    body = response.json()
-    actual_role = body["profile"]["role"]["name"]
-    assert actual_role == expected_role, (
-        f"\n\tExpected profile role: {expected_role}\n\tActual profile role: {actual_role}"
+def assert_error_detail(response, expected_detail):
+    body = get_json_body(response)
+    actual_detail = body.get("detail")
+    assert actual_detail == expected_detail, (
+        f"\n\tExpected error detail: {expected_detail}\n\tActual error detail: {actual_detail}"
     )
-
-
-def assert_profile_username(response, expected_username):
-    body = response.json()
-    actual_username = body["profile"]["username"]
-    assert actual_username == expected_username, (
-        f"\n\tExpected profile username: {expected_username}\n\tActual profile username: {actual_username}"
-    )
-
-
-def assert_token_is_valid(response):
-    body = response.json()
-    assert body["message"] == "Token is valid", (
-        f"\n\tExpected message: Token is valid\n\tActual message: {body['message']}"
-    )
-    assert "user" in body, "\n\tUser not found in token verification response JSON"
