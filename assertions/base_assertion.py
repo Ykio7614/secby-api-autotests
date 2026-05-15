@@ -63,3 +63,11 @@ def assert_token_is_valid(response):
         f"\n\tExpected message: Token is valid\n\tActual message: {body['message']}"
     )
     assert "user" in body, "\n\tUser not found in token verification response JSON"
+
+
+def assert_error_detail(response, expected_detail):
+    body = response.json()
+    actual_detail = body.get("detail")
+    assert actual_detail == expected_detail, (
+        f"\n\tExpected error detail: {expected_detail}\n\tActual error detail: {actual_detail}"
+    )

@@ -4,11 +4,13 @@ from assertions.base_assertion import (
     assert_profile_exists,
     assert_profile_role,
     assert_profile_username,
+    assert_error_detail,
     assert_status_code,
     assert_token_is_valid,
     assert_token_type_is_bearer,
 )
 from models.auth_models import Token
+from test_data.expected_errors import INCORRECT_USERNAME_OR_PASSWORD, NOT_AUTHENTICATED
 
 
 def test_user_can_login(auth_api, user_credentials):
@@ -28,6 +30,7 @@ def test_user_cannot_login_with_invalid_password(auth_api, user_credentials):
     response = auth_api.login(username, "wrong_password")
 
     assert_status_code(response, 401)
+    assert_error_detail(response, INCORRECT_USERNAME_OR_PASSWORD)
 
 
 def test_authorized_user_can_get_profile(api_client, auth_api, user_api, user_credentials):
@@ -46,6 +49,7 @@ def test_user_cannot_get_profile_without_token(user_api):
     response = user_api.get_my_profile()
 
     assert_status_code(response, 403)
+    assert_error_detail(response, NOT_AUTHENTICATED)
 
 
 def test_authorized_user_profile_has_expected_username_and_role(
@@ -79,6 +83,7 @@ def test_token_cannot_be_verified_without_token(auth_api):
     response = auth_api.verify()
 
     assert_status_code(response, 403)
+    assert_error_detail(response, NOT_AUTHENTICATED)
 
 
 def test_authorized_admin_can_get_profile(api_client, auth_api, user_api, admin_credentials):
