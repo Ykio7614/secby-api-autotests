@@ -11,12 +11,13 @@ from assertions.base_assertion import (
 )
 from models.auth_models import Token
 from test_data.expected_errors import INCORRECT_USERNAME_OR_PASSWORD, NOT_AUTHENTICATED
+from tests.helpers import call_api, extract_access_token
 
 
 def test_user_can_login(auth_api, user_credentials):
     username, password = user_credentials
 
-    response = auth_api.login(username, password)
+    response = call_api("login as user", auth_api.login, username, password)
 
     assert_status_code(response, 200)
     assert_json_schema(response, Token)
@@ -27,7 +28,7 @@ def test_user_can_login(auth_api, user_credentials):
 def test_user_cannot_login_with_invalid_password(auth_api, user_credentials):
     username, _ = user_credentials
 
-    response = auth_api.login(username, "wrong_password")
+    response = call_api("login with invalid password", auth_api.login, username, "wrong_password")
 
     assert_status_code(response, 401)
     assert_error_detail(response, INCORRECT_USERNAME_OR_PASSWORD)
@@ -35,18 +36,18 @@ def test_user_cannot_login_with_invalid_password(auth_api, user_credentials):
 
 def test_authorized_user_can_get_profile(api_client, auth_api, user_api, user_credentials):
     username, password = user_credentials
-    login_response = auth_api.login(username, password)
-    token = login_response.json()["access_token"]
+    login_response = call_api("login as user before profile request", auth_api.login, username, password)
+    token = extract_access_token(login_response)
 
     api_client.set_token(token)
-    profile_response = user_api.get_my_profile()
+    profile_response = call_api("get user profile", user_api.get_my_profile)
 
     assert_status_code(profile_response, 200)
     assert_profile_exists(profile_response)
 
 
 def test_user_cannot_get_profile_without_token(user_api):
-    response = user_api.get_my_profile()
+    response = call_api("get profile without token", user_api.get_my_profile)
 
     assert_status_code(response, 403)
     assert_error_detail(response, NOT_AUTHENTICATED)
@@ -56,11 +57,11 @@ def test_authorized_user_profile_has_expected_username_and_role(
     api_client, auth_api, user_api, user_credentials
 ):
     username, password = user_credentials
-    login_response = auth_api.login(username, password)
-    token = login_response.json()["access_token"]
+    login_response = call_api("login as user before role check", auth_api.login, username, password)
+    token = extract_access_token(login_response)
 
     api_client.set_token(token)
-    profile_response = user_api.get_my_profile()
+    profile_response = call_api("get user profile for role check", user_api.get_my_profile)
 
     assert_status_code(profile_response, 200)
     assert_profile_username(profile_response, username)
@@ -69,18 +70,18 @@ def test_authorized_user_profile_has_expected_username_and_role(
 
 def test_user_token_can_be_verified(api_client, auth_api, user_credentials):
     username, password = user_credentials
-    login_response = auth_api.login(username, password)
-    token = login_response.json()["access_token"]
+    login_response = call_api("login as user before token verification", auth_api.login, username, password)
+    token = extract_access_token(login_response)
 
     api_client.set_token(token)
-    verify_response = auth_api.verify()
+    verify_response = call_api("verify user token", auth_api.verify)
 
     assert_status_code(verify_response, 200)
     assert_token_is_valid(verify_response)
 
 
 def test_token_cannot_be_verified_without_token(auth_api):
-    response = auth_api.verify()
+    response = call_api("verify token without token", auth_api.verify)
 
     assert_status_code(response, 403)
     assert_error_detail(response, NOT_AUTHENTICATED)
@@ -88,11 +89,11 @@ def test_token_cannot_be_verified_without_token(auth_api):
 
 def test_authorized_admin_can_get_profile(api_client, auth_api, user_api, admin_credentials):
     username, password = admin_credentials
-    login_response = auth_api.login(username, password)
-    token = login_response.json()["access_token"]
+    login_response = call_api("login as admin before profile request", auth_api.login, username, password)
+    token = extract_access_token(login_response)
 
     api_client.set_token(token)
-    profile_response = user_api.get_my_profile()
+    profile_response = call_api("get admin profile", user_api.get_my_profile)
 
     assert_status_code(profile_response, 200)
     assert_profile_exists(profile_response)
@@ -103,11 +104,11 @@ def test_authorized_admin_profile_has_expected_username_and_role(
     api_client, auth_api, user_api, admin_credentials
 ):
     username, password = admin_credentials
-    login_response = auth_api.login(username, password)
-    token = login_response.json()["access_token"]
+    login_response = call_api("login as admin before role check", auth_api.login, username, password)
+    token = extract_access_token(login_response)
 
     api_client.set_token(token)
-    profile_response = user_api.get_my_profile()
+    profile_response = call_api("get admin profile for role check", user_api.get_my_profile)
 
     assert_status_code(profile_response, 200)
     assert_profile_username(profile_response, username)
