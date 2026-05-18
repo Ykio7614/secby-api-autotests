@@ -36,6 +36,16 @@ def extract_access_token(response):
         pytest.fail(f"Login response does not contain access_token: {response.text}")
 
 
+def extract_user_email(response):
+    try:
+        body = response.json()
+        return body["user"]["email"]
+    except ValueError:
+        pytest.fail(f"Login response is not valid JSON: {response.text}")
+    except KeyError:
+        pytest.fail(f"Login response does not contain user email: {response.text}")
+
+
 def extract_profile(response):
     try:
         body = response.json()
