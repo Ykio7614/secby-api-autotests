@@ -20,3 +20,11 @@ def assert_profile_username(response, expected_username):
     assert actual_username == expected_username, (
         f"\n\tExpected profile username: {expected_username}\n\tActual profile username: {actual_username}"
     )
+
+
+def assert_profile_email(response, expected_email):
+    body = get_json_body(response)
+    actual_email = body["profile"]["email"]
+    assert actual_email == expected_email, (
+        f"\n\tExpected profile email: {expected_email}\n\tActual profile email: {actual_email}"
+    )
